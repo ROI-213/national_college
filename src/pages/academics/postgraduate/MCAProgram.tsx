@@ -3,8 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { AcademicsLayout } from '../../../components/layout/AcademicsLayout';
 import { Card } from '../../../components/ui/card';
 import { Button } from '../../../components/ui/button';
-import { MCAApplicationForm } from '../../../components/admissions/MCAApplicationForm';
-import { Code, Database, Cloud, Brain, Shield, Smartphone, CheckCircle, GraduationCap, Briefcase, Target, BookOpen, Users, Sparkles, ArrowRight, ArrowDown, Download, Eye } from 'lucide-react';
+import { Code, Database, Cloud, Brain, Shield, Smartphone, CheckCircle, GraduationCap, Briefcase, Target, BookOpen, Users, Sparkles, ArrowRight, Download, Eye } from 'lucide-react';
 
 const highlights = [
   { icon: Code, title: 'Advanced Programming', description: 'Java, Python, C#, and modern frameworks for enterprise application development.' },
@@ -150,25 +149,27 @@ const MCAProgram = () => {
         </div>
       </section>
 
-      {/* MCA Admission Application Form Section */}
-      <section id="apply-mca" className="py-12 bg-white border-t border-slate-200 scroll-mt-16">
-        <div className="container mx-auto px-4 max-w-5xl">
-          <div className="text-center mb-8">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-900 border border-amber-300 mb-3">
-              <Sparkles size={14} className="text-amber-600" />
-              Admissions Open for MCA 2026-27 Batch
-            </span>
-            <h2 className="text-3xl md:text-4xl font-extrabold text-logo-navy">
-              Apply for MCA Admission
-            </h2>
-            <p className="text-gray-600 mt-2 max-w-2xl mx-auto text-sm md:text-base">
-              Submit your application details below. The course is pre-selected for Master of Computer Applications (MCA).
-            </p>
-          </div>
-
-          <div className="bg-slate-50/60 rounded-3xl p-4 md:p-8 border border-slate-200 shadow-sm">
-            <MCAApplicationForm source="mca_page_embedded" />
-          </div>
+      {/* MCA Admission CTA Section */}
+      <section className="py-12 bg-white border-t border-slate-200">
+        <div className="container mx-auto px-4 max-w-4xl text-center">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-900 border border-amber-300 mb-3">
+            <Sparkles size={14} className="text-amber-600" />
+            Admissions Open for MCA 2026-27 Batch
+          </span>
+          <h2 className="text-2xl md:text-3xl font-bold text-logo-navy mb-3">
+            Ready to Apply for MCA?
+          </h2>
+          <p className="text-gray-600 mb-6 text-sm md:text-base max-w-xl mx-auto">
+            Take the first step towards joining our AICTE-approved MCA programme at The National College, Basavanagudi.
+          </p>
+          <Button
+            onClick={() => navigate('/admissions/mca-application')}
+            className="bg-amber-500 hover:bg-amber-600 text-white font-bold px-8 py-3 rounded-full shadow-md hover:shadow-lg transition-all inline-flex items-center gap-2 text-base"
+          >
+            <GraduationCap size={19} />
+            <span>Apply for MCA 2026-27 Admission</span>
+            <ArrowRight size={17} />
+          </Button>
         </div>
       </section>
     </AcademicsLayout>
