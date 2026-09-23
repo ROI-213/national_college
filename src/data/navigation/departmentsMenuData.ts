@@ -1,0 +1,20 @@
+
+export const departmentsDropdownData = [
+  { label: 'Dept of Kannada', href: '/academics/departments/kannada' },
+  { label: 'Dept of English', href: '/academics/departments/english' },
+  { label: 'Dept of Hindi', href: '/academics/departments/hindi' },
+  { label: 'Dept of Sanskrit', href: '/academics/departments/sanskrit' },
+  { label: 'Dept of Computer Science', href: '/academics/departments/computer-science' },
+  { label: 'Dept of Animation', href: '/academics/departments/animation' },
+  { label: 'Dept of Economics', href: '/academics/departments/economics' },
+  { label: 'Dept of Sociology', href: '/academics/departments/sociology' },
+  { label: 'Dept of Political Science', href: '/academics/departments/political-science' },
+  { label: 'Dept of Electronics', href: '/academics/departments/electronics' },
+  { label: 'Dept of Commerce', href: '/academics/departments/commerce' },
+  { label: 'Dept of Mathematics', href: '/academics/departments/mathematics' },
+  { label: 'Dept of Zoology', href: '/academics/departments/zoology' },
+  { label: 'Dept of Botany', href: '/academics/departments/botany' },
+  { label: 'Dept of Physics', href: '/academics/departments/physics' },
+  { label: 'Dept of Chemistry', href: '/academics/departments/chemistry' },
+  { label: 'Dept of Journalism', href: '/academics/departments/journalism' },
+];
