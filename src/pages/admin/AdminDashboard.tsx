@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   FileText, MessageSquare, Search, Download,
   Eye, LogOut, Key, ChevronDown, GraduationCap,
-  LayoutDashboard, RefreshCw, Users, Code2, Images, CalendarDays
+  LayoutDashboard, RefreshCw, Users, Code2, Images, CalendarDays, Camera, Video
 } from 'lucide-react';
 import { supabase, EnquiryStatus } from '@/lib/supabase';
 import { format } from 'date-fns';
@@ -189,6 +189,20 @@ const AdminDashboard = () => {
           >
             <Images size={16} />
             Event Gallery
+          </button>
+          <button
+            onClick={() => navigate('/admin/photo-gallery')}
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 mb-1 text-white/60 hover:bg-white/8 hover:text-white"
+          >
+            <Camera size={16} />
+            Photo Gallery
+          </button>
+          <button
+            onClick={() => navigate('/admin/video-gallery')}
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 mb-1 text-white/60 hover:bg-white/8 hover:text-white"
+          >
+            <Video size={16} />
+            Video Gallery
           </button>
         </nav>
 

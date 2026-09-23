@@ -11,6 +11,8 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import MCAAdminDashboard from "./pages/admin/MCAAdminDashboard";
 import EventGalleryManager from "./pages/admin/EventGalleryManager";
 import EventManager from "./pages/admin/EventManager";
+import PhotoGalleryManager from "./pages/admin/PhotoGalleryManager";
+import VideoGalleryManager from "./pages/admin/VideoGalleryManager";
 import Contact from "./pages/Contact";
 import NotFound from "./pages/NotFound";
 import CollegeDayDetail from "./pages/CollegeDayDetail";
@@ -334,6 +336,8 @@ const App = () => (
           <Route path="/admin/mca-applications" element={<MCAAdminDashboard />} />
           <Route path="/admin/events" element={<EventManager />} />
           <Route path="/admin/event-gallery" element={<EventGalleryManager />} />
+          <Route path="/admin/photo-gallery" element={<PhotoGalleryManager />} />
+          <Route path="/admin/video-gallery" element={<VideoGalleryManager />} />
 
           {/* Event Detail Routes */}
           <Route path="/events/college-day-2026" element={<CollegeDayDetail />} />

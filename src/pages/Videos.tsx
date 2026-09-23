@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { MediaCenterLayout } from '@/components/layout/MediaCenterLayout';
+import { fetchGalleryVideos, GalleryVideoRecord } from '@/services/mediaGalleryService';
 
-const videoIds = [
+const defaultVideoIds = [
   'iWltsRevd_E',
   'wG-4lNBk1ZU',
   'p6h74uVPOjg',
@@ -18,7 +19,36 @@ const videoIds = [
   '5ERMTdzy__A',
 ];
 
+const defaultVideos: { id: string; title: string; youtube_id: string }[] = defaultVideoIds.map((id, index) => ({
+  id: id,
+  title: `Campus Video ${index + 1}`,
+  youtube_id: id,
+}));
+
 const Videos = () => {
+  const [videos, setVideos] = useState<GalleryVideoRecord[] | typeof defaultVideos>(defaultVideos);
+
+  useEffect(() => {
+    let isMounted = true;
+    const loadVideos = async () => {
+      try {
+        const records = await fetchGalleryVideos();
+        if (isMounted && records && records.length > 0) {
+          setVideos(records);
+        }
+      } catch (e) {
+        console.warn('Could not load dynamic videos, using fallback:', e);
+      }
+    };
+
+    loadVideos();
+    window.addEventListener('gallery-videos-updated', loadVideos);
+    return () => {
+      isMounted = false;
+      window.removeEventListener('gallery-videos-updated', loadVideos);
+    };
+  }, []);
+
   return (
     <MediaCenterLayout pageTitle="Campus Videos & Media Highlights" breadcrumbPath="Videos">
       <section className="py-16">
@@ -31,21 +61,33 @@ const Videos = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
-            {videoIds.map((id) => (
-              <div key={id} className="rounded-xl overflow-hidden border border-border shadow-md hover:shadow-xl transition-shadow duration-300">
-                <div className="aspect-video">
+            {videos.map((vid) => (
+              <div
+                key={vid.id || vid.youtube_id}
+                className="rounded-xl overflow-hidden border border-border shadow-md hover:shadow-xl transition-shadow duration-300 bg-white flex flex-col"
+              >
+                <div className="aspect-video bg-black">
                   <iframe
-                    src={`https://www.youtube.com/embed/${id}`}
-                    title={`Video ${id}`}
+                    src={`https://www.youtube.com/embed/${vid.youtube_id}`}
+                    title={vid.title || `Video ${vid.youtube_id}`}
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                     allowFullScreen
                     className="w-full h-full"
                     loading="lazy"
                   />
                 </div>
+                {vid.title && (
+                  <div className="p-3 border-t border-border/60">
+                    <p className="text-xs font-semibold text-slate-700 line-clamp-1">{vid.title}</p>
+                  </div>
+                )}
               </div>
             ))}
           </div>
+
+          {videos.length === 0 && (
+            <p className="text-center text-muted-foreground py-16">No videos found in the gallery.</p>
+          )}
         </div>
       </section>
     </MediaCenterLayout>

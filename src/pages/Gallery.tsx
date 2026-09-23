@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { MediaCenterLayout } from '@/components/layout/MediaCenterLayout';
 import { Lightbox } from '@/components/gallery/Lightbox';
 import { Photo } from '@/components/gallery/types';
+import { fetchGalleryPhotos, GALLERY_CATEGORIES } from '@/services/mediaGalleryService';
 
 import galleryCampus1 from '@/assets/gallery-campus1.jpg';
 import galleryCampus2 from '@/assets/gallery-campus2.jpg';
@@ -32,46 +33,92 @@ import galleryDrama2 from '@/assets/gallery-drama2.jpg';
 import galleryDrama3 from '@/assets/gallery-drama3.jpg';
 import galleryDrama4 from '@/assets/gallery-drama4.jpg';
 
-const photos: Photo[] = [
-  { id: 1, src: galleryCampus1, title: 'Campus View 1', category: 'campus', views: 1200 },
-  { id: 2, src: galleryEvent1, title: 'Cultural Event', category: 'events', views: 980 },
-  { id: 3, src: galleryLabs1, title: 'Computer Lab', category: 'labs', views: 850 },
-  { id: 4, src: gallerySports1, title: 'Cricket Team', category: 'sports', views: 1320 },
-  { id: 5, src: galleryStudents1, title: 'Students with Laptop', category: 'students', views: 910 },
-  { id: 6, src: galleryCampus2, title: 'Campus View 2', category: 'campus', views: 1100 },
-  { id: 7, src: galleryEvent2, title: 'Annual Day', category: 'events', views: 1450 },
-  { id: 8, src: galleryLabs2, title: 'Animation Lab', category: 'labs', views: 780 },
-  { id: 9, src: gallerySports2, title: 'Sports Action', category: 'sports', views: 1150 },
-  { id: 10, src: galleryStudents2, title: 'Campus Hangout', category: 'students', views: 870 },
-  { id: 11, src: galleryCampus3, title: 'Campus View 3', category: 'campus', views: 920 },
-  { id: 12, src: galleryEvent3, title: 'Sports Day', category: 'events', views: 1300 },
-  { id: 13, src: galleryLabs3, title: 'Design Studio', category: 'labs', views: 690 },
-  { id: 14, src: gallerySports3, title: 'Athletics Meet', category: 'sports', views: 1080 },
-  { id: 15, src: galleryStudents3, title: 'Study Group', category: 'students', views: 820 },
-  { id: 16, src: galleryCampus4, title: 'Campus View 4', category: 'campus', views: 780 },
-  { id: 17, src: galleryEvent4, title: 'Seminar Hall Event', category: 'events', views: 1050 },
-  { id: 18, src: galleryLabs4, title: 'Electronics Lab', category: 'labs', views: 730 },
-  { id: 19, src: gallerySports4, title: 'Sports Day Awards', category: 'sports', views: 960 },
-  { id: 20, src: galleryEvent5, title: 'Award Ceremony', category: 'events', views: 1600 },
-  { id: 21, src: galleryWomensday1, title: "Women's Day 2026 - 1", category: 'events', views: 0 },
-  { id: 22, src: galleryWomensday2, title: "Women's Day 2026 - 2", category: 'events', views: 0 },
-  { id: 23, src: galleryWomensday3, title: "Women's Day 2026 - 3", category: 'events', views: 0 },
-  { id: 24, src: galleryWomensday4, title: "Women's Day 2026 - 4", category: 'events', views: 0 },
-  { id: 25, src: galleryDrama1, title: 'Intersection Drama - 1', category: 'intersection drama', views: 0 },
-  { id: 26, src: galleryDrama2, title: 'Intersection Drama - 2', category: 'intersection drama', views: 0 },
-  { id: 27, src: galleryDrama3, title: 'Intersection Drama - 3', category: 'intersection drama', views: 0 },
-  { id: 28, src: galleryDrama4, title: 'Intersection Drama - 4', category: 'intersection drama', views: 0 },
+const defaultPhotos: Photo[] = [
+  { id: 1, src: galleryCampus1, title: 'Campus View 1', category: 'Campus', views: 1200 },
+  { id: 2, src: galleryEvent1, title: 'Cultural Event', category: 'Events', views: 980 },
+  { id: 3, src: galleryLabs1, title: 'Computer Lab', category: 'Labs', views: 850 },
+  { id: 4, src: gallerySports1, title: 'Cricket Team', category: 'Sports', views: 1320 },
+  { id: 5, src: galleryStudents1, title: 'Students with Laptop', category: 'Students', views: 910 },
+  { id: 6, src: galleryCampus2, title: 'Campus View 2', category: 'Campus', views: 1100 },
+  { id: 7, src: galleryEvent2, title: 'Annual Day', category: 'Events', views: 1450 },
+  { id: 8, src: galleryLabs2, title: 'Animation Lab', category: 'Labs', views: 780 },
+  { id: 9, src: gallerySports2, title: 'Sports Action', category: 'Sports', views: 1150 },
+  { id: 10, src: galleryStudents2, title: 'Campus Hangout', category: 'Students', views: 870 },
+  { id: 11, src: galleryCampus3, title: 'Campus View 3', category: 'Campus', views: 920 },
+  { id: 12, src: galleryEvent3, title: 'Sports Day', category: 'Events', views: 1300 },
+  { id: 13, src: galleryLabs3, title: 'Design Studio', category: 'Labs', views: 690 },
+  { id: 14, src: gallerySports3, title: 'Athletics Meet', category: 'Sports', views: 1080 },
+  { id: 15, src: galleryStudents3, title: 'Study Group', category: 'Students', views: 820 },
+  { id: 16, src: galleryCampus4, title: 'Campus View 4', category: 'Campus', views: 780 },
+  { id: 17, src: galleryEvent4, title: 'Seminar Hall Event', category: 'Events', views: 1050 },
+  { id: 18, src: galleryLabs4, title: 'Electronics Lab', category: 'Labs', views: 730 },
+  { id: 19, src: gallerySports4, title: 'Sports Day Awards', category: 'Sports', views: 960 },
+  { id: 20, src: galleryEvent5, title: 'Award Ceremony', category: 'Events', views: 1600 },
+  { id: 21, src: galleryWomensday1, title: "Women's Day 2026 - 1", category: 'Events', views: 0 },
+  { id: 22, src: galleryWomensday2, title: "Women's Day 2026 - 2", category: 'Events', views: 0 },
+  { id: 23, src: galleryWomensday3, title: "Women's Day 2026 - 3", category: 'Events', views: 0 },
+  { id: 24, src: galleryWomensday4, title: "Women's Day 2026 - 4", category: 'Events', views: 0 },
+  { id: 25, src: galleryDrama1, title: 'Intersection Drama - 1', category: 'Intersection Drama', views: 0 },
+  { id: 26, src: galleryDrama2, title: 'Intersection Drama - 2', category: 'Intersection Drama', views: 0 },
+  { id: 27, src: galleryDrama3, title: 'Intersection Drama - 3', category: 'Intersection Drama', views: 0 },
+  { id: 28, src: galleryDrama4, title: 'Intersection Drama - 4', category: 'Intersection Drama', views: 0 },
 ];
-
-const categories = ['All', 'Events', 'Intersection Drama', 'Campus', 'Labs', 'Sports', 'Students'];
 
 const Gallery = () => {
   const [activeFilter, setActiveFilter] = useState('All');
   const [selectedImage, setSelectedImage] = useState<number | null>(null);
+  const [photosList, setPhotosList] = useState<Photo[]>(defaultPhotos);
 
-  const filteredPhotos = activeFilter === 'All'
-    ? photos
-    : photos.filter(p => p.category.toLowerCase() === activeFilter.toLowerCase());
+  useEffect(() => {
+    let isMounted = true;
+    const loadPhotos = async () => {
+      try {
+        const records = await fetchGalleryPhotos();
+        if (isMounted && records && records.length > 0) {
+          const mapped: Photo[] = records.map((r, i) => ({
+            id: i + 1,
+            src: r.src,
+            title: r.title || `Gallery Photo ${i + 1}`,
+            category: r.category || 'Events',
+            views: r.views || 0,
+          }));
+          setPhotosList(mapped);
+        }
+      } catch (e) {
+        console.warn('Could not load dynamic photos, using fallback:', e);
+      }
+    };
+
+    loadPhotos();
+    window.addEventListener('gallery-photos-updated', loadPhotos);
+    return () => {
+      isMounted = false;
+      window.removeEventListener('gallery-photos-updated', loadPhotos);
+    };
+  }, []);
+
+  // Compute unique categories dynamically
+  const categories = useMemo(() => {
+    const set = new Set<string>(GALLERY_CATEGORIES);
+    photosList.forEach(p => {
+      if (p.category) {
+        // Capitalize first letter of words
+        const formatted = p.category
+          .split(' ')
+          .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+          .join(' ');
+        set.add(formatted);
+      }
+    });
+    return Array.from(set);
+  }, [photosList]);
+
+  const filteredPhotos = useMemo(() => {
+    if (activeFilter === 'All') return photosList;
+    return photosList.filter(
+      p => p.category.toLowerCase() === activeFilter.toLowerCase()
+    );
+  }, [photosList, activeFilter]);
 
   const handleNavigate = (direction: 'prev' | 'next') => {
     if (selectedImage === null) return;
@@ -86,13 +133,14 @@ const Gallery = () => {
     <MediaCenterLayout pageTitle="Photo Gallery" breadcrumbPath="Gallery">
       <section className="py-16">
         <div className="container mx-auto px-4">
+          {/* Category Filter Pills */}
           <div className="flex flex-wrap justify-center gap-3 mb-10">
             {categories.map((cat) => (
               <button
                 key={cat}
                 onClick={() => { setActiveFilter(cat); setSelectedImage(null); }}
                 className={`px-5 py-2 rounded-full text-sm font-medium transition-all duration-200 border ${
-                  activeFilter === cat
+                  activeFilter.toLowerCase() === cat.toLowerCase()
                     ? 'bg-logo-navy text-white border-logo-navy shadow-md'
                     : 'bg-white text-muted-foreground border-border hover:border-logo-blue hover:text-logo-blue'
                 }`}
@@ -102,11 +150,12 @@ const Gallery = () => {
             ))}
           </div>
 
+          {/* Photo Grid */}
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 max-w-7xl mx-auto">
             {filteredPhotos.map((photo, index) => (
               <div
-                key={photo.id}
-                className="group relative aspect-square overflow-hidden rounded-xl border border-border shadow-sm hover:shadow-xl cursor-pointer transition-all duration-300"
+                key={photo.id || index}
+                className="group relative aspect-square overflow-hidden rounded-xl border border-border shadow-sm hover:shadow-xl cursor-pointer transition-all duration-300 bg-slate-100"
                 onClick={() => setSelectedImage(index)}
               >
                 <img
@@ -115,6 +164,9 @@ const Gallery = () => {
                   className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                   loading="lazy"
                 />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-3">
+                  <p className="text-white text-xs font-semibold truncate">{photo.title}</p>
+                </div>
               </div>
             ))}
           </div>

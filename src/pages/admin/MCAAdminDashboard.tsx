@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   GraduationCap, Search, Download, Eye, LogOut, Key,
   ChevronDown, LayoutDashboard, RefreshCw, Users, FileText,
-  MessageSquare, Code2
+  MessageSquare, Code2, CalendarDays, Images, Camera, Video
 } from 'lucide-react';
 import { supabase, EnquiryStatus } from '@/lib/supabase';
 import { format } from 'date-fns';
@@ -157,6 +157,39 @@ const MCAAdminDashboard = () => {
           >
             <MessageSquare size={16} />
             Contact Page
+          </button>
+
+          {/* Content section */}
+          <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest px-3 mb-2 mt-4">
+            Content
+          </p>
+          <button
+            onClick={() => navigate('/admin/events')}
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 mb-1 text-white/60 hover:bg-white/8 hover:text-white"
+          >
+            <CalendarDays size={16} />
+            Events
+          </button>
+          <button
+            onClick={() => navigate('/admin/event-gallery')}
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 mb-1 text-white/60 hover:bg-white/8 hover:text-white"
+          >
+            <Images size={16} />
+            Event Gallery
+          </button>
+          <button
+            onClick={() => navigate('/admin/photo-gallery')}
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 mb-1 text-white/60 hover:bg-white/8 hover:text-white"
+          >
+            <Camera size={16} />
+            Photo Gallery
+          </button>
+          <button
+            onClick={() => navigate('/admin/video-gallery')}
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 mb-1 text-white/60 hover:bg-white/8 hover:text-white"
+          >
+            <Video size={16} />
+            Video Gallery
           </button>
         </nav>
 

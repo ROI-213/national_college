@@ -2,7 +2,7 @@ import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import {
   GraduationCap, LogOut, Key, Code2, FileText, MessageSquare,
-  Images, CalendarDays, ChevronLeft, ChevronRight, Plus, Trash2, Check,
+  Images, CalendarDays, Camera, Video, ChevronLeft, ChevronRight, Plus, Trash2, Check,
   ImageIcon, AlertCircle, Upload, X, Loader2,
   FolderOpen, CheckCircle2, ArrowRight, ExternalLink, Save, RefreshCw,
 } from 'lucide-react';
@@ -478,6 +478,8 @@ const EventGalleryManager: React.FC = () => {
           <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest px-3 mb-2 mt-4">Content</p>
           <SidebarLink icon={CalendarDays} label="Events" onClick={() => navigate('/admin/events')} />
           <SidebarLink icon={Images} label="Event Gallery" onClick={() => navigate('/admin/event-gallery')} active />
+          <SidebarLink icon={Camera} label="Photo Gallery" onClick={() => navigate('/admin/photo-gallery')} />
+          <SidebarLink icon={Video} label="Video Gallery" onClick={() => navigate('/admin/video-gallery')} />
         </nav>
 
         <div className="p-3 border-t border-white/10 space-y-1">
