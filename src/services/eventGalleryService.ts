@@ -128,16 +128,28 @@ export async function saveEventGallery(slug: string, images: EventGalleryImage[]
   }
 }
 
+export const DEFAULT_EVENT_GALLERY_COUNTS: Record<string, number> = {
+  'farewell-mca-2026': 42,
+  'animation-block-inauguration-2026': 33,
+  'independence-day-2026': 23,
+  'talents-day-2026': 17,
+  'nss-inauguration-2026': 8,
+  'musical-night-2026': 5,
+  'college-day-2026': 38,
+};
+
 /**
  * Fetch image counts for all events from Supabase and local cache.
  * Returns a map of slug -> count.
  */
 export async function fetchAllEventGalleryCounts(): Promise<Record<string, number>> {
-  const counts: Record<string, number> = {};
+  const counts: Record<string, number> = { ...DEFAULT_EVENT_GALLERY_COUNTS };
 
   // 1. Initial counts from static dataset
   allEvents.forEach(e => {
-    counts[e.slug] = e.images?.length || 0;
+    if (e.images && e.images.length > 0) {
+      counts[e.slug] = e.images.length;
+    }
   });
 
   // 2. Check localStorage cache

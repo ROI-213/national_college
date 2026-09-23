@@ -1,9 +1,10 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { AcademicsLayout } from '../../../components/layout/AcademicsLayout';
 import { Card } from '../../../components/ui/card';
 import { Button } from '../../../components/ui/button';
 import { MCAApplicationForm } from '../../../components/admissions/MCAApplicationForm';
-import { Code, Database, Cloud, Brain, Shield, Smartphone, CheckCircle, GraduationCap, Briefcase, Target, BookOpen, Users, Sparkles, ArrowDown, Download, Eye } from 'lucide-react';
+import { Code, Database, Cloud, Brain, Shield, Smartphone, CheckCircle, GraduationCap, Briefcase, Target, BookOpen, Users, Sparkles, ArrowRight, ArrowDown, Download, Eye } from 'lucide-react';
 
 const highlights = [
   { icon: Code, title: 'Advanced Programming', description: 'Java, Python, C#, and modern frameworks for enterprise application development.' },
@@ -35,11 +36,10 @@ const careers = [
 ];
 
 const MCAProgram = () => {
-  const scrollToApply = () => {
-    const el = document.getElementById('apply-mca');
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth' });
-    }
+  const navigate = useNavigate();
+
+  const handleApplyClick = () => {
+    navigate('/admissions/mca-application');
   };
 
   return (
@@ -56,12 +56,12 @@ const MCAProgram = () => {
           </p>
           <div>
             <Button
-              onClick={scrollToApply}
+              onClick={handleApplyClick}
               className="bg-amber-500 hover:bg-amber-600 text-white font-bold px-6 py-2.5 rounded-full shadow-md hover:shadow-lg transition-all inline-flex items-center gap-2"
             >
               <GraduationCap size={18} />
               <span>Apply for MCA 2026-27 Admission</span>
-              <ArrowDown size={16} />
+              <ArrowRight size={16} />
             </Button>
           </div>
         </div>

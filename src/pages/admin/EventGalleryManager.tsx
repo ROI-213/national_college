@@ -7,7 +7,20 @@ import {
   FolderOpen, CheckCircle2, ArrowRight, ExternalLink, Save, RefreshCw,
 } from 'lucide-react';
 import { allEvents, EventData, EventGalleryImage } from '@/data/eventsData';
-import { fetchEventGallery, uploadEventImageFile, saveEventGallery, fetchAllEventGalleryCounts } from '@/services/eventGalleryService';
+import {
+  fetchEventGallery,
+  uploadEventImageFile,
+  saveEventGallery,
+  fetchAllEventGalleryCounts,
+  DEFAULT_EVENT_GALLERY_COUNTS,
+} from '@/services/eventGalleryService';
+import {
+  fetchAllEventsFromDB,
+  createEvent,
+  generateSlug,
+  parseDateToSortDate,
+  getMonthYear,
+} from '@/services/eventsService';
 import ChangePasswordModal from '@/components/admin/ChangePasswordModal';
 import { useToast } from '@/components/ui/use-toast';
 
@@ -95,19 +108,63 @@ const EventGalleryManager: React.FC = () => {
   const { toast } = useToast();
 
   const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [eventsList, setEventsList] = useState<EventData[]>(allEvents);
   const [selectedSlug, setSelectedSlug] = useState<string>(allEvents[0]?.slug || '');
   const [images, setImages] = useState<EventGalleryImage[]>([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [savedSuccess, setSavedSuccess] = useState(false);
   const [search, setSearch] = useState('');
-  const [galleryCounts, setGalleryCounts] = useState<Record<string, number>>({});
+  const [galleryCounts, setGalleryCounts] = useState<Record<string, number>>(DEFAULT_EVENT_GALLERY_COUNTS);
+
+  // New Event Modal state
+  const [showNewEventModal, setShowNewEventModal] = useState(false);
+  const [creatingEvent, setCreatingEvent] = useState(false);
+  const [newEventForm, setNewEventForm] = useState({
+    title: '',
+    date: '',
+    time: '10:00 AM',
+    venue: 'College Quadrangle',
+    badge: '',
+    description: '',
+  });
 
   // Uploading state
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgressText, setUploadProgressText] = useState('');
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Load events list from DB
+  const loadEventsList = useCallback(async () => {
+    try {
+      const dbList = await fetchAllEventsFromDB();
+      if (dbList && dbList.length > 0) {
+        setEventsList(dbList.map(r => ({
+          slug: r.slug,
+          title: r.title,
+          pageTitle: r.page_title,
+          badge: r.badge,
+          subtitle: r.subtitle,
+          date: r.date,
+          sortDate: r.sort_date,
+          monthYear: r.month_year,
+          time: r.time,
+          venue: r.venue,
+          description: r.description,
+          paragraphs: Array.isArray(r.paragraphs) ? r.paragraphs : [],
+        })));
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadEventsList();
+    window.addEventListener('events-updated', loadEventsList);
+    return () => window.removeEventListener('events-updated', loadEventsList);
+  }, [loadEventsList]);
 
   // Load counts for all events
   const loadCounts = useCallback(async () => {
@@ -137,7 +194,86 @@ const EventGalleryManager: React.FC = () => {
     navigate('/admin');
   };
 
-  const selectedEvent = allEvents.find(e => e.slug === selectedSlug) || allEvents[0];
+  const selectedEvent = eventsList.find(e => e.slug === selectedSlug) || eventsList[0] || allEvents[0];
+
+  const handleCreateNewEvent = async () => {
+    if (!newEventForm.title.trim()) {
+      toast({ title: 'Event Title is required', variant: 'destructive' });
+      return;
+    }
+    if (!newEventForm.date.trim()) {
+      toast({ title: 'Event Date is required', variant: 'destructive' });
+      return;
+    }
+    setCreatingEvent(true);
+    try {
+      const slug = generateSlug(newEventForm.title);
+      const sortDate = parseDateToSortDate(newEventForm.date, newEventForm.time);
+      const monthYear = getMonthYear(sortDate);
+      const badge = newEventForm.badge.trim() || newEventForm.title.trim();
+      const newRecord = {
+        slug,
+        title: newEventForm.title.trim(),
+        page_title: newEventForm.title.trim(),
+        badge,
+        subtitle: newEventForm.title.trim(),
+        date: newEventForm.date.trim(),
+        sort_date: sortDate,
+        month_year: monthYear,
+        time: newEventForm.time.trim(),
+        venue: newEventForm.venue.trim(),
+        description: newEventForm.description.trim() || `${newEventForm.title.trim()} organized at The National College, Basavanagudi.`,
+        paragraphs: [
+          `${newEventForm.title.trim()} was celebrated with great spirit and enthusiasm at The National College, Basavanagudi.`
+        ],
+        is_visible: true,
+      };
+
+      await createEvent(newRecord);
+
+      const newEventData: EventData = {
+        slug: newRecord.slug,
+        title: newRecord.title,
+        pageTitle: newRecord.page_title,
+        badge: newRecord.badge,
+        subtitle: newRecord.subtitle,
+        date: newRecord.date,
+        sortDate: newRecord.sort_date,
+        monthYear: newRecord.month_year,
+        time: newRecord.time,
+        venue: newRecord.venue,
+        description: newRecord.description,
+        paragraphs: newRecord.paragraphs,
+      };
+
+      setEventsList(prev => [newEventData, ...prev]);
+      setSelectedSlug(newEventData.slug);
+      setImages([]);
+      setGalleryCounts(prev => ({ ...prev, [newEventData.slug]: 0 }));
+      setShowNewEventModal(false);
+      setNewEventForm({
+        title: '',
+        date: '',
+        time: '10:00 AM',
+        venue: 'College Quadrangle',
+        badge: '',
+        description: '',
+      });
+
+      toast({
+        title: 'Event Created Successfully!',
+        description: `"${newEventData.title}" is now added. You can now upload gallery photos!`,
+      });
+    } catch (err: any) {
+      toast({
+        title: 'Error Creating Event',
+        description: err.message || 'Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setCreatingEvent(false);
+    }
+  };
 
   // Load images whenever selectedSlug changes
   const loadGalleryForSlug = useCallback(async (slug: string) => {
@@ -163,9 +299,10 @@ const EventGalleryManager: React.FC = () => {
   }, [selectedSlug, loadGalleryForSlug]);
 
   // Filter events
-  const filteredEvents = allEvents.filter(e =>
+  const filteredEvents = eventsList.filter(e =>
     e.title.toLowerCase().includes(search.toLowerCase()) ||
-    e.slug.toLowerCase().includes(search.toLowerCase())
+    e.slug.toLowerCase().includes(search.toLowerCase()) ||
+    e.date.toLowerCase().includes(search.toLowerCase())
   );
 
   // ── Handle Upload & Compress ──
@@ -376,6 +513,14 @@ const EventGalleryManager: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-3">
+            <button
+              onClick={() => setShowNewEventModal(true)}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white transition-all shadow-sm"
+            >
+              <Plus size={14} />
+              Add Event
+            </button>
+
             <a
               href={liveEventUrl}
               target="_blank"
@@ -414,7 +559,17 @@ const EventGalleryManager: React.FC = () => {
         <div className="flex-1 flex overflow-hidden">
           {/* ── Event List (Left Panel) ── */}
           <div className="w-72 border-r border-gray-200 bg-white flex flex-col">
-            <div className="p-3 border-b border-gray-100">
+            <div className="p-3 border-b border-gray-100 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Events ({eventsList.length})</span>
+                <button
+                  onClick={() => setShowNewEventModal(true)}
+                  className="inline-flex items-center gap-1 px-2.5 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-lg text-xs font-bold transition-all"
+                >
+                  <Plus size={13} />
+                  Add Event
+                </button>
+              </div>
               <input
                 type="text"
                 value={search}
@@ -722,6 +877,136 @@ const EventGalleryManager: React.FC = () => {
           </div>
         </div>
       </main>
+
+      {/* ── New Event Modal ── */}
+      {showNewEventModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 space-y-4">
+            <div className="flex items-center justify-between border-b pb-3">
+              <div>
+                <h3 className="font-bold text-gray-900 text-base">Add New Event</h3>
+                <p className="text-xs text-gray-500">Create an event to start uploading its photo gallery</p>
+              </div>
+              <button
+                onClick={() => setShowNewEventModal(false)}
+                className="p-1.5 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              <div>
+                <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1">
+                  Event Title <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={newEventForm.title}
+                  onChange={e => setNewEventForm(f => ({ ...f, title: e.target.value }))}
+                  placeholder="e.g. Annual Sports Day 2026"
+                  className="w-full px-3.5 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1">
+                    Event Date <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={newEventForm.date}
+                    onChange={e => setNewEventForm(f => ({ ...f, date: e.target.value }))}
+                    placeholder="e.g. 24th Sep 2026"
+                    className="w-full px-3.5 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1">
+                    Time
+                  </label>
+                  <input
+                    type="text"
+                    value={newEventForm.time}
+                    onChange={e => setNewEventForm(f => ({ ...f, time: e.target.value }))}
+                    placeholder="e.g. 10:00 AM"
+                    className="w-full px-3.5 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1">
+                    Venue
+                  </label>
+                  <input
+                    type="text"
+                    value={newEventForm.venue}
+                    onChange={e => setNewEventForm(f => ({ ...f, venue: e.target.value }))}
+                    placeholder="e.g. College Quadrangle"
+                    className="w-full px-3.5 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1">
+                    Badge / Tag
+                  </label>
+                  <input
+                    type="text"
+                    value={newEventForm.badge}
+                    onChange={e => setNewEventForm(f => ({ ...f, badge: e.target.value }))}
+                    placeholder="e.g. Sports Day 2026"
+                    className="w-full px-3.5 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1">
+                  Short Description
+                </label>
+                <textarea
+                  value={newEventForm.description}
+                  onChange={e => setNewEventForm(f => ({ ...f, description: e.target.value }))}
+                  rows={2}
+                  placeholder="Brief summary of the event..."
+                  className="w-full px-3.5 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 resize-none"
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-2 border-t">
+              <button
+                type="button"
+                onClick={() => setShowNewEventModal(false)}
+                className="px-4 py-2 text-xs font-semibold text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleCreateNewEvent}
+                disabled={creatingEvent}
+                className="inline-flex items-center gap-1.5 px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-lg shadow-sm transition-all disabled:opacity-50"
+              >
+                {creatingEvent ? (
+                  <>
+                    <Loader2 size={13} className="animate-spin" />
+                    Creating...
+                  </>
+                ) : (
+                  <>
+                    <Plus size={13} />
+                    Create Event
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {showPasswordModal && <ChangePasswordModal onClose={() => setShowPasswordModal(false)} />}
     </div>
