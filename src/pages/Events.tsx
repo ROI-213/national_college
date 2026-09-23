@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { allEvents, EventData } from '@/data/eventsData';
 import { fetchAllEventsFromDB, EventRecord } from '@/services/eventsService';
-import { Calendar, Clock, MapPin, Filter, Loader2 } from 'lucide-react';
+import { Calendar, Clock, MapPin, Loader2 } from 'lucide-react';
 
 // Convert DB record to EventData shape
 function dbToEventData(r: EventRecord): EventData {
@@ -27,7 +27,6 @@ function dbToEventData(r: EventRecord): EventData {
 
 const Events = () => {
   const navigate = useNavigate();
-  const [selectedMonth, setSelectedMonth] = useState<string>('all');
   const [dbEvents, setDbEvents] = useState<EventData[]>([]);
   const [loadingDb, setLoadingDb] = useState(true);
 
@@ -62,21 +61,6 @@ const Events = () => {
     return [...dbEvents].sort((a, b) => b.sortDate.localeCompare(a.sortDate));
   }, [dbEvents]);
 
-  // Extract ordered list of unique months
-  const months = useMemo(() => {
-    const list: string[] = [];
-    sortedEvents.forEach(e => {
-      if (!list.includes(e.monthYear)) list.push(e.monthYear);
-    });
-    return list;
-  }, [sortedEvents]);
-
-  // Filter by selected month
-  const displayedEvents = useMemo(() => {
-    if (selectedMonth === 'all') return sortedEvents;
-    return sortedEvents.filter(e => e.monthYear === selectedMonth);
-  }, [sortedEvents, selectedMonth]);
-
   const handleDetailsClick = (event: EventData) => {
     navigate(`/events/${event.slug}`);
   };
@@ -98,44 +82,8 @@ const Events = () => {
               <Loader2 size={32} className="animate-spin text-logo-navy" />
             </div>
           ) : (
-            <>
-              {/* Month Filter Pills */}
-              <div className="flex flex-wrap items-center justify-center gap-2 mb-12 max-w-4xl mx-auto">
-                <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 mr-2 uppercase tracking-wider">
-                  <Filter size={14} />
-                  <span>Filter by Month:</span>
-                </div>
-                <button
-                  onClick={() => setSelectedMonth('all')}
-                  className={`px-3.5 py-1.5 rounded-full text-xs font-medium transition-all ${
-                    selectedMonth === 'all'
-                      ? 'bg-logo-navy text-white shadow-sm'
-                      : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
-                  }`}
-                >
-                  All Events ({sortedEvents.length})
-                </button>
-                {months.map(m => {
-                  const count = sortedEvents.filter(e => e.monthYear === m).length;
-                  return (
-                    <button
-                      key={m}
-                      onClick={() => setSelectedMonth(m)}
-                      className={`px-3.5 py-1.5 rounded-full text-xs font-medium transition-all ${
-                        selectedMonth === m
-                          ? 'bg-logo-navy text-white shadow-sm'
-                          : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
-                      }`}
-                    >
-                      {m} ({count})
-                    </button>
-                  );
-                })}
-              </div>
-
-              {/* Continuous Grid */}
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
-                {displayedEvents.map(event => (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
+              {sortedEvents.map(event => (
                   <Card
                     key={event.slug}
                     className="shadow-md hover:shadow-xl transition-shadow border-border flex flex-col justify-between"
@@ -187,7 +135,6 @@ const Events = () => {
                   </Card>
                 ))}
               </div>
-            </>
           )}
         </div>
       </section>
